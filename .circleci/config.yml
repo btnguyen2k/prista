@@ -51,11 +51,11 @@ workflows:
           type: approval
           requires:
             - build_docker_image
-#          filters:
-#            tags:
-#              only: /^release-.*$/
-#            branches:
-#              ignore: /.*/
+          filters:
+            tags:
+              only: /^release-.*$/
+            branches:
+              ignore: /.*/
       - push_docker_image:
           requires:
             - hold_for_approval
