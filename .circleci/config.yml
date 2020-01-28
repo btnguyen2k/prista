@@ -26,10 +26,10 @@ jobs:
             export CI_PROJECT_VERSION=`echo $CIRCLE_TAG | cut -d'-' -f 2` |
             docker build --force-rm -t prista:$CI_PROJECT_VERSION . |
             docker images |
-            mkdir /caches |
-            docker save -o /caches/docker_cache.tar prista:$CI_PROJECT_VERSION
+            mkdir caches |
+            docker save -o caches/docker_cache.tar prista:$CI_PROJECT_VERSION
       - persist_to_workspace:
-          root: /caches
+          root: caches
           paths:
             - docker_cache.tar
   push_docker_image:
@@ -38,7 +38,7 @@ jobs:
     steps:
       - setup_remote_docker
       - attach_workspace:
-          at: /caches
+          at: caches
       - run:
           name: Login Docker Hub
           command: echo $DOCKER_REGISTRY_PASSWORD | docker login -u $DOCKER_REGISTRY_USER --password-stdin $DOCKER_REGISTRY_SERVER
@@ -46,7 +46,7 @@ jobs:
           name: Push Docker Image
           command: |
             echo $CIRCLE_TAG |
-            docker load -i /caches/docker_cache.tar |
+            docker load -i caches/docker_cache.tar |
             docker images |
             export CI_PROJECT_VERSION=`echo $CIRCLE_TAG | cut -d'-' -f 2` |
             docker push prista:$CI_PROJECT_VERSION
