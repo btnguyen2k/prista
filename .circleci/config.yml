@@ -44,6 +44,8 @@ workflows:
           filters:
             tags:
               only: /^release-.*$/
+            branches:
+              ignore: /.*/
       - push_docker_image:
           type: approval
           requires:
@@ -51,3 +53,5 @@ workflows:
           filters:
             tags:
               only: /^release-.*$/
+            branches:
+              ignore: /.*/
