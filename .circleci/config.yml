@@ -25,6 +25,7 @@ jobs:
   push_docker_image:
     docker:
       - image: circleci/golang:1.13
+    working_directory: /go/src/github.com/btnguyen2k/prista
     steps:
       - setup_remote_docker
       - run:
