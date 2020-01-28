@@ -51,3 +51,8 @@ workflows:
           type: approval
           requires:
             - build_docker_image
+          filters:
+            tags:
+              only: /^release-.*$/
+            branches:
+              ignore: /.*/
