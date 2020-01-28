@@ -8,7 +8,6 @@ import (
 	"log"
 	"main/src/logger"
 	"main/src/utils"
-	"net"
 	"os"
 	"strings"
 	"sync"
@@ -157,27 +156,6 @@ func initLogWriters(config *configuration.Config) map[string]logger.ILogWriter {
 		return result
 	}
 	return nil
-}
-
-// initialize and start UDP server
-func initUdpServer(wg *sync.WaitGroup) bool {
-	fmt.Println("HEHEHEHE")
-	listenPort := AppConfig.GetInt32("server.udp.listen_port", 0)
-	if listenPort <= 0 {
-		log.Println("No valid [server.udp.listen_port] configured, UDP Server is disabled.")
-		return false
-	}
-	listenAddr := AppConfig.GetString("server.udp.listen_addr", "127.0.0.1")
-
-	fmt.Println("UDP", listenAddr, listenPort)
-
-	pc, err := net.ListenPacket("udp", fmt.Sprintf("%s:%d", listenAddr, listenPort))
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println(pc)
-
-	return true
 }
 
 // convenient function to handle incoming message

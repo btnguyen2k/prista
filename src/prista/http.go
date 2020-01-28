@@ -15,7 +15,7 @@ import (
 func initHttpServer(wg *sync.WaitGroup) bool {
 	listenPort := AppConfig.GetInt32("server.http.listen_port", 0)
 	if listenPort <= 0 {
-		log.Println("No valid [server.http.listen_port] configured, HTTP Server is disabled.")
+		log.Println("No valid [server.http.listen_port] configured, HTTP server is disabled.")
 		return false
 	}
 	listenAddr := AppConfig.GetString("server.http.listen_addr", "127.0.0.1")

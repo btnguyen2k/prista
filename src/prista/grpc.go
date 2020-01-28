@@ -17,7 +17,7 @@ import (
 func initGrpcServer(wg *sync.WaitGroup) bool {
 	listenPort := AppConfig.GetInt32("server.grpc.listen_port", 0)
 	if listenPort <= 0 {
-		log.Println("No valid [server.grpc.listen_port] configured, gRPC Server is disabled.")
+		log.Println("No valid [server.grpc.listen_port] configured, gRPC server is disabled.")
 		return false
 	}
 	listenAddr := AppConfig.GetString("server.grpc.listen_addr", "127.0.0.1")
