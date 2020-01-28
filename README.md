@@ -60,6 +60,9 @@ Cloning into 'prista'...
 
 % cd prista
 prista % docker build --force-rm -t prista:0.1.0 .
+Sending build context to Docker daemon  14.26MB
+Step 1/12 : FROM golang:1.13-alpine AS builder
+...
 ```
 
 ### Start/Stop prista
