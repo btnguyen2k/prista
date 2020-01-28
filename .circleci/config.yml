@@ -21,7 +21,7 @@ jobs:
       - setup_remote_docker
       - run:
           name: Build Docker Image
-          command: export CI_PROJECT_VERSION=`echo $CIRCLE_TAG | cut -d'-' -f 2` && docker build --force-rm -t prista:$CI_PROJECT_VERSION . && docker images
+          command: echo $CIRCLE_TAG && export CI_PROJECT_VERSION=`echo $CIRCLE_TAG | cut -d'-' -f 2` && docker build --force-rm -t prista:$CI_PROJECT_VERSION . && docker images
   push_docker_image:
     docker:
       - image: circleci/golang:1.13
@@ -51,4 +51,3 @@ workflows:
           filters:
             tags:
               only: /^release-.*$/
-
