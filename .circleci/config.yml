@@ -23,11 +23,9 @@ jobs:
           name: Build Docker Image
           command: |
             echo $CIRCLE_TAG |
-            export CI_PROJECT_VERSION=`echo $CIRCLE_TAG | cut -d'-' -f 2` |
-            docker build --force-rm -t prista:$CI_PROJECT_VERSION . |
-            docker images |
             mkdir caches |
-            docker save -o caches/docker_cache.tar prista:$CI_PROJECT_VERSION
+            export CI_PROJECT_VERSION=`echo $CIRCLE_TAG | cut -d'-' -f 2` && docker build --force-rm -t prista:$CI_PROJECT_VERSION . && docker save -o caches/docker_cache.tar prista:$CI_PROJECT_VERSION |
+            docker images
       - persist_to_workspace:
           root: caches
           paths:
@@ -48,8 +46,7 @@ jobs:
             echo $CIRCLE_TAG |
             docker load -i caches/docker_cache.tar |
             docker images |
-            export CI_PROJECT_VERSION=`echo $CIRCLE_TAG | cut -d'-' -f 2` |
-            docker push prista:$CI_PROJECT_VERSION
+            export CI_PROJECT_VERSION=`echo $CIRCLE_TAG | cut -d'-' -f 2` && docker push prista:$CI_PROJECT_VERSION
 workflows:
   version: 2
   build:
