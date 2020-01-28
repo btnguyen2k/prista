@@ -47,7 +47,10 @@ jobs:
             && docker load -i caches/docker_cache.tar
             && docker images
             && export CI_PROJECT_VERSION=`echo $CIRCLE_TAG | cut -d'-' -f 2`
-            && docker push prista:$CI_PROJECT_VERSION
+            && docker tag prista:$CI_PROJECT_VERSION $DOCKER_REGISTRY_SERVER/prista:$CI_PROJECT_VERSION
+            && docker tag prista:$CI_PROJECT_VERSION $DOCKER_REGISTRY_SERVER/prista:latest
+            && docker push $DOCKER_REGISTRY_SERVER/prista:$CI_PROJECT_VERSION
+            && docker push $DOCKER_REGISTRY_SERVER/prista:latest
 workflows:
   version: 2
   build:
