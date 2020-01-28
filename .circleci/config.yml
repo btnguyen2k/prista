@@ -43,8 +43,7 @@ workflows:
       - build_docker_image:
           filters:
             tags:
-              only:
-                - /^release-.*$/
+              only: /^release-.*$/
       - push_docker_image:
           type: approval
           requires:
