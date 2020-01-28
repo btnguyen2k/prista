@@ -27,3 +27,4 @@ jobs:
       - run:
           name: Build Docker image
           command: docker build --force-rm -t prista:0.1.0 .
+      - run: docker images
