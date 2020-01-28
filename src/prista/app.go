@@ -6,7 +6,6 @@ import (
 	"github.com/btnguyen2k/singu/leveldb"
 	"github.com/go-akka/configuration"
 	"log"
-	"main/src/itineris"
 	"main/src/logger"
 	"main/src/utils"
 	"net"
@@ -20,7 +19,6 @@ import (
 var (
 	AppConfig  *configuration.Config
 	LogConfig  *configuration.Config
-	ApiRouter  *itineris.ApiRouter
 	LogWriters map[string]logger.ILogWriter
 	Buffer     singu.IQueue
 
