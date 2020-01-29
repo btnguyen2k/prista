@@ -170,9 +170,9 @@ Detailed configurations of "file" log writer.
 
 | Key          | Require | Default Value | Description |
 |--------------|:-------:|:-------------:|-------------|
-| root         | [x]     |               | Root directory to store log files. If the directory does not exist, it will be automatically created. |
-| file_pattern | [x]     |               | Name of the log file. It accepts Go-style of datetime format. Therefore, to rotate log file every hour, an example of file name pattern would be default.log-20060102_15 |
-| log_tyle     |         | json          | (*) Format of log file content: `tsv` or `json` |
+| root         | yes     |               | Root directory to store log files. If the directory does not exist, it will be automatically created. |
+| file_pattern | yes     |               | Name of the log file. It accepts Go-style of datetime format. Therefore, to rotate log file every hour, an example of file name pattern would be default.log-20060102_15 |
+| log_type     |         | json          | (*) Format of log file content: `tsv` or `json` |
 
 (*) Log file format:
 - `tsv`: one line per log entry in the following format `<category-name><tab-character><log-message>`
