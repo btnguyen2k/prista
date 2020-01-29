@@ -59,7 +59,7 @@ Cloning into 'prista'...
 ...
 
 % cd prista
-prista % docker build --force-rm -t prista:0.1.0 .
+prista % docker build --force-rm -t prista:<version> .
 Sending build context to Docker daemon  14.26MB
 Step 1/12 : FROM golang:1.13-alpine AS builder
 ...
@@ -100,8 +100,11 @@ Press `Ctrl-C` to stop `prista`.
 Start a container from `prista` image, mapping port 8070, 8080 and 8090:
 
 ```shell script
-% docker run -d -p 8070:8070/udp -p 8080:8080 -p 8090:8090 prista:0.1.0
+% docker run -d -p 8070:8070/udp -p 8080:8080 -p 8090:8090 prista:<version>
 ```
+
+Docker hub: https://hub.docker.com/r/btnguyen2k/prista
+
 
 ## Configurations
 
