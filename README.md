@@ -34,6 +34,17 @@ Send log entry in the following format to UDP gateway: `<category><\t><message>`
 
 By default, UDP gateway listens on port `8070`.
 
+## Features & TODO
+
+- [x] Collect logs via HTTP, gRPC and UDP service
+- [x] Log writer to write logs to file:
+  - [x] Time-based file rotation
+  - [ ] Size-based rotation
+- [ ] Log writer to forward logs to another `prista`
+- [ ] Log writer that is a chain of log writers
+- [ ] Plugin architecture for log writer
+
+
 ## Installation
 
 ### Build from source
@@ -145,6 +156,28 @@ log {
   }
 }
 ```
+
+## Built-in Log Writers
+
+### "file" log writer
+
+This log writer persists log messages to files on disk in text-based format.
+
+To enable "file" log writer for a category, set config key `log.<category>.type="file"`.
+Then, log writer's configurations are loaded from `log.<category>.file` block.
+
+Detailed configurations of "file" log writer.
+
+| Key          | Require | Default Value | Description |
+|--------------|:-------:|:-------------:|-------------|
+| root         | [x]     |               | Root directory to store log files. If the directory does not exist, it will be automatically created. |
+| file_pattern | [x]     |               | Name of the log file. It accepts Go-style of datetime format. Therefore, to rotate log file every hour, an example of file name pattern would be default.log-20060102_15 |
+| log_tyle     |         | json          | (*) Format of log file content: `tsv` or `json` |
+
+(*) Log file format:
+- `tsv`: one line per log entry in the following format `<category-name><tab-character><log-message>`
+- `json`: one line per log entry in the following format `{"category":<category-name>, "message": <log-message>}`
+
 
 ## LICENSE & COPYRIGHT
 
