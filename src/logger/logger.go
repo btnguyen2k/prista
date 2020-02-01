@@ -8,8 +8,24 @@ import (
 	"reflect"
 )
 
+const (
+	DefaultRetrySeconds = 60
+)
+
+type LogWriterAndInfo struct {
+	LogWriter    ILogWriter
+	RetrySeconds int64
+}
+
 // ILogWriter defines API to write log message.
 type ILogWriter interface {
+	// Info returns log writer's attributes:
+	//	- name: (string) unique name of the log writer
+	//	- desc: (string) more descriptive information of the log writer
+	//	- retry_seconds: (int) number of seconds to retry writing a log message in case of failure (0: no retry, negative value: retry forever)
+	// @available since v0.1.1
+	Info() map[string]interface{}
+
 	// Init initializes the writer with initial configurations. Writer is considered not ready for use until Init is called successfully.
 	Init(conf map[string]interface{}) error
 

@@ -22,9 +22,10 @@ func NewFileLogWriter(cat string, confMap map[string]interface{}) (ILogWriter, e
 }
 
 type FileLogWriter struct {
-	category    string // log category
-	root        string // root directory to store log files
-	filePattern string // log file pattern (accept Go style of datetime format)
+	category     string // log category
+	root         string // root directory to store log files
+	filePattern  string // log file pattern (accept Go style of datetime format)
+	retrySeconds int    // number of seconds to retry writing log entry in case of failure
 
 	currentFileName string
 	currentFile     *os.File
@@ -34,14 +35,24 @@ type FileLogWriter struct {
 }
 
 const (
-	confRoot        = "root"
-	confFilePattern = "file_pattern"
-	confLogType     = "log_type"
+	confRoot         = "root"
+	confFilePattern  = "file_pattern"
+	confLogType      = "log_type"
+	confRetrySeconds = "retry_seconds"
 
 	logTypeTsv     = "tsv"
 	logTypeJson    = "json"
 	defaultLogType = logTypeJson
 )
+
+// Info implements ILogWriter.Info
+func (w *FileLogWriter) Info() map[string]interface{} {
+	return map[string]interface{}{
+		"name":          "file",
+		"desc":          "This log writer persists log messages to files on disk in text-based format",
+		"retry_seconds": w.retrySeconds,
+	}
+}
 
 // Init implements ILogWriter.Init
 func (w *FileLogWriter) Init(confMap map[string]interface{}) error {
@@ -81,11 +92,15 @@ func (w *FileLogWriter) Init(confMap map[string]interface{}) error {
 			w.logType = defaultLogType
 		}
 
+		if retrySeconds, err := conf.GetValueOfType("confRetrySeconds", reddo.TypeInt); err != nil {
+			w.retrySeconds = DefaultRetrySeconds
+		} else {
+			w.retrySeconds = int(retrySeconds.(int64))
+		}
+
 		if err := os.MkdirAll(w.root, 0755); err != nil {
 			return err
 		}
-
-		// w.currentFileName = time.Now().Format(w.filePattern)
 
 		w.inited = true
 	}

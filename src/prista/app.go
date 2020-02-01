@@ -2,6 +2,8 @@ package prista
 
 import (
 	"fmt"
+	"github.com/btnguyen2k/consu/reddo"
+	"github.com/btnguyen2k/consu/semita"
 	"github.com/btnguyen2k/singu"
 	"github.com/btnguyen2k/singu/leveldb"
 	"github.com/go-akka/configuration"
@@ -18,7 +20,7 @@ import (
 var (
 	AppConfig  *configuration.Config
 	LogConfig  *configuration.Config
-	LogWriters map[string]logger.ILogWriter
+	LogWriters map[string]*logger.LogWriterAndInfo
 	Buffer     singu.IQueue
 
 	ConcurrentWrite int64 = 0
@@ -115,9 +117,12 @@ func goWriteLogs(buffer singu.IQueue) {
 				}
 				if logWriter == nil {
 					log.Printf(fmt.Sprintf("WARM: no log writer found for category [%s]", tokens[0]))
-				} else if err := logWriter.Write(tokens[0], tokens[1]); err != nil {
+				} else if err := logWriter.LogWriter.Write(tokens[0], tokens[1]); err != nil {
 					log.Printf(fmt.Sprintf("ERROR: error writing log to [%s]: %e", tokens[0], err))
-					finish = false
+					if logWriter.RetrySeconds < 0 || msg.Timestamp.Unix()+logWriter.RetrySeconds >= time.Now().Unix() {
+						// set finish=false to requeue if message has not been queued for 'RetrySeconds'
+						finish = false
+					}
 				}
 			}
 			if finish {
@@ -138,16 +143,23 @@ func goWriteLogs(buffer singu.IQueue) {
 	}
 }
 
-func initLogWriters(config *configuration.Config) map[string]logger.ILogWriter {
+func initLogWriters(config *configuration.Config) map[string]*logger.LogWriterAndInfo {
 	if config != nil && config.Root().IsObject() {
-		result := make(map[string]logger.ILogWriter)
+		result := make(map[string]*logger.LogWriterAndInfo)
 		for cat, conf := range config.Root().GetObject().Items() {
 			if conf != nil && conf.IsObject() {
 				cat = strings.ToLower(cat)
 				if writer, err := logger.NewLogWriter(cat, conf.GetObject().Unwrapped()); err != nil {
 					panic(err)
 				} else {
-					result[cat] = writer
+					lwi := logger.LogWriterAndInfo{LogWriter: writer}
+					info := semita.NewSemita(writer.Info())
+					retrySeconds, err := info.GetValueOfType("retry_seconds", reddo.TypeInt)
+					if err != nil || retrySeconds == nil {
+						retrySeconds = logger.DefaultRetrySeconds
+					}
+					lwi.RetrySeconds = retrySeconds.(int64)
+					result[cat] = &lwi
 				}
 			} else {
 				panic(fmt.Sprintf("invalid config for log writer [%s]: %v", cat, conf))
