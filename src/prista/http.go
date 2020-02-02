@@ -5,6 +5,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"log"
+	"main/src/logger"
 	"net/http"
 	"strings"
 	"sync"
@@ -68,9 +69,9 @@ func httpHandlerLog(c echo.Context) error {
 	if category == "" || message == "" {
 		return c.HTML(http.StatusBadRequest, "Missing parameter [category] and/or [message]")
 	}
-	payload := strings.ToLower(category) + "\t" + message
+	payload := strings.ToLower(category) + logger.SeparatorTsv + message
 	if err := handleIncomingMessage([]byte(payload)); err != nil {
 		return c.HTML(http.StatusInternalServerError, err.Error())
 	}
-	return c.HTML(http.StatusOK, "Ok")
+	return c.JSON(http.StatusOK, map[string]interface{}{"status": 200, "message": "Ok"})
 }

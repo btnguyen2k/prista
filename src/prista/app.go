@@ -104,11 +104,11 @@ func goProcessOrphanLogs(buffer singu.IQueue) {
 func goWriteLogs(buffer singu.IQueue) {
 	for {
 		time.Sleep(1 * time.Second)
-		var counter int64 = 0
+		var counterAll, counterSuccess int64 = 0, 0
 		t1 := time.Now()
 		for msg, err := buffer.Take(); err == nil && msg != nil; msg, err = buffer.Take() {
-			counter++
-			tokens := strings.Split(string(msg.Payload), "\t")
+			counterAll++
+			tokens := strings.Split(string(msg.Payload), logger.SeparatorTsv)
 			var finish = true
 			if len(tokens) == 2 {
 				logWriter := LogWriters[tokens[0]]
@@ -123,6 +123,8 @@ func goWriteLogs(buffer singu.IQueue) {
 						// set finish=false to requeue if message has not been queued for 'RetrySeconds'
 						finish = false
 					}
+				} else {
+					counterSuccess++
 				}
 			}
 			if finish {
@@ -132,13 +134,13 @@ func goWriteLogs(buffer singu.IQueue) {
 			} else if _, err := buffer.Requeue(msg.Id, false); err != nil {
 				log.Printf(fmt.Sprintf("ERROR: error requeueing message %s/%s: %e", msg.Id, string(msg.Payload), err))
 			}
-			if ConcurrentWrite > 0 && counter >= 100/(ConcurrentWrite+1) || time.Now().Unix()-t1.Unix() >= 10 {
+			if ConcurrentWrite > 0 && counterAll >= 100/(ConcurrentWrite+1) || time.Now().Unix()-t1.Unix() >= 10 {
 				// throttle [buffer->log-writer] rate
 				break
 			}
 		}
-		if counter > 0 {
-			log.Printf(fmt.Sprintf("INFO: %d log(s) written", counter))
+		if counterSuccess > 0 {
+			log.Printf(fmt.Sprintf("INFO: %d log(s) written", counterSuccess))
 		}
 	}
 }
@@ -153,8 +155,9 @@ func initLogWriters(config *configuration.Config) map[string]*logger.LogWriterAn
 					panic(err)
 				} else {
 					lwi := logger.LogWriterAndInfo{LogWriter: writer}
-					info := semita.NewSemita(writer.Info())
-					retrySeconds, err := info.GetValueOfType("retry_seconds", reddo.TypeInt)
+					wInfo := writer.Info()
+					info := semita.NewSemita(wInfo)
+					retrySeconds, err := info.GetValueOfType(logger.ConfRetrySeconds, reddo.TypeInt)
 					if err != nil || retrySeconds == nil {
 						retrySeconds = logger.DefaultRetrySeconds
 					}

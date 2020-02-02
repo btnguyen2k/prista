@@ -1,5 +1,5 @@
 ## Sample build command:
-## docker build --force-rm --squash -t prista:0.1.0 .
+## docker build --force-rm --squash -t prista:0.1.1 .
 
 FROM golang:1.13-alpine AS builder
 MAINTAINER Thanh Nguyen <btnguyen2k@gmail.com>

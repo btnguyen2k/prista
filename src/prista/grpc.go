@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	pb "main/src/grpc"
+	"main/src/logger"
 	"net"
 	"strings"
 	"sync"
@@ -61,7 +62,7 @@ func (server *PLogCollectorServiceServer) Log(_ context.Context, msg *pb.PLogMes
 			Message:    "Missing parameter [category] and/or [message]",
 		}, nil
 	}
-	payload := strings.ToLower(category) + "\t" + message
+	payload := strings.ToLower(category) + logger.SeparatorTsv + message
 	if err := handleIncomingMessage([]byte(payload)); err != nil {
 		return &pb.PLogResult{
 			Status:     500,
@@ -100,7 +101,7 @@ func (server *PLogCollectorServiceServer) LogStream(msgs pb.PLogCollectorService
 			result.Message = "Missing parameter [category] and/or [message]"
 			return msgs.SendAndClose(result)
 		}
-		payload := strings.ToLower(category) + "\t" + message
+		payload := strings.ToLower(category) + logger.SeparatorTsv + message
 		if err := handleIncomingMessage([]byte(payload)); err != nil {
 			result.Status = 500
 			result.Message = err.Error()

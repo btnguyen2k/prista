@@ -10,6 +10,8 @@ import (
 
 const (
 	DefaultRetrySeconds = 60
+	SeparatorTsv        = "\t"
+	ConfRetrySeconds    = "retry_seconds"
 )
 
 type LogWriterAndInfo struct {
@@ -56,8 +58,14 @@ func NewLogWriter(cat string, confMap map[string]interface{}) (ILogWriter, error
 		} else {
 			return NewFileLogWriter(cat, confFile.(map[string]interface{}))
 		}
+	case "forward":
+		if confForward, err := conf.GetValueOfType("forward", typeMap); err != nil {
+			return nil, err
+		} else {
+			return NewForwardLogWriter(cat, confForward.(map[string]interface{}))
+		}
 	default:
-		errors.New(fmt.Sprintf("unknown writer type [%s]", wrtType))
+		return nil, errors.New(fmt.Sprintf("unknown writer type [%s]", wrtType))
 	}
 	return nil, nil
 }

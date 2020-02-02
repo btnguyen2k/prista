@@ -35,10 +35,9 @@ type FileLogWriter struct {
 }
 
 const (
-	confRoot         = "root"
-	confFilePattern  = "file_pattern"
-	confLogType      = "log_type"
-	confRetrySeconds = "retry_seconds"
+	confFileRoot    = "root"
+	confFilePattern = "file_pattern"
+	confFileLogType = "log_type"
 
 	logTypeTsv     = "tsv"
 	logTypeJson    = "json"
@@ -63,7 +62,7 @@ func (w *FileLogWriter) Init(confMap map[string]interface{}) error {
 		conf := semita.NewSemita(confMap)
 
 		// config: root
-		if root, err := conf.GetValueOfType(confRoot, reddo.TypeString); err != nil {
+		if root, err := conf.GetValueOfType(confFileRoot, reddo.TypeString); err != nil {
 			return err
 		} else {
 			w.root = strings.TrimPrefix(strings.TrimSpace(root.(string)), "/")
@@ -83,7 +82,7 @@ func (w *FileLogWriter) Init(confMap map[string]interface{}) error {
 		}
 
 		// config: log type
-		logType, _ := conf.GetValueOfType(confLogType, reddo.TypeString)
+		logType, _ := conf.GetValueOfType(confFileLogType, reddo.TypeString)
 		if logType == nil {
 			logType = ""
 		}
@@ -92,7 +91,7 @@ func (w *FileLogWriter) Init(confMap map[string]interface{}) error {
 			w.logType = defaultLogType
 		}
 
-		if retrySeconds, err := conf.GetValueOfType("confRetrySeconds", reddo.TypeInt); err != nil {
+		if retrySeconds, err := conf.GetValueOfType(ConfRetrySeconds, reddo.TypeInt); err != nil {
 			w.retrySeconds = DefaultRetrySeconds
 		} else {
 			w.retrySeconds = int(retrySeconds.(int64))
@@ -134,7 +133,7 @@ func (w *FileLogWriter) RefreshConfig(conf map[string]interface{}) error {
 func (w *FileLogWriter) formatLogMessage(category, message string) []byte {
 	switch w.logType {
 	case logTypeTsv:
-		return []byte(category + "\t" + strings.TrimSpace(message))
+		return []byte(category + SeparatorTsv + strings.TrimSpace(message))
 	case logTypeJson:
 		js, _ := json.Marshal(map[string]string{
 			"category": category,
