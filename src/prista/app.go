@@ -1,12 +1,14 @@
 package prista
 
 import (
+	"context"
 	"fmt"
 	"github.com/btnguyen2k/consu/reddo"
 	"github.com/btnguyen2k/consu/semita"
 	"github.com/btnguyen2k/singu"
 	"github.com/btnguyen2k/singu/leveldb"
 	"github.com/go-akka/configuration"
+	"golang.org/x/sync/semaphore"
 	"log"
 	"main/src/logger"
 	"main/src/utils"
@@ -100,47 +102,64 @@ func goProcessOrphanLogs(buffer singu.IQueue) {
 	}
 }
 
+func getLogWriter(cat string) *logger.LogWriterAndInfo {
+	lwi := LogWriters[cat]
+	if lwi == nil {
+		lwi = LogWriters["default"]
+	}
+	return lwi
+}
+
 // Go routine to fetch messages from buffer and send to log writer
 func goWriteLogs(buffer singu.IQueue) {
+	sema := semaphore.NewWeighted(128)
+	var counterSuccess int64 = 0
 	for {
 		time.Sleep(1 * time.Second)
-		var counterAll, counterSuccess int64 = 0, 0
+		var counterAll, markSuccess int64 = 0, counterSuccess
 		t1 := time.Now()
-		for msg, err := buffer.Take(); err == nil && msg != nil; msg, err = buffer.Take() {
-			counterAll++
-			tokens := strings.Split(string(msg.Payload), logger.SeparatorTsv)
-			var finish = true
-			if len(tokens) == 2 {
-				logWriter := LogWriters[tokens[0]]
-				if logWriter == nil {
-					logWriter = LogWriters["default"]
-				}
-				if logWriter == nil {
-					log.Printf(fmt.Sprintf("WARM: no log writer found for category [%s]", tokens[0]))
-				} else if err := logWriter.LogWriter.Write(tokens[0], tokens[1]); err != nil {
-					log.Printf(fmt.Sprintf("ERROR: error writing log to [%s]: %e", tokens[0], err))
-					if logWriter.RetrySeconds < 0 || msg.Timestamp.Unix()+logWriter.RetrySeconds >= time.Now().Unix() {
-						// set finish=false to requeue if message has not been queued for 'RetrySeconds'
-						finish = false
-					}
+		for {
+			ctx, _ := context.WithTimeout(context.Background(), 1*time.Second)
+			if err := sema.Acquire(ctx, 1); err == nil {
+				if msg, err := buffer.Take(); err == nil && msg != nil {
+					atomic.AddInt64(&counterAll, 1)
+					go func(msg *singu.QueueMessage, counterSuccess *int64, sema *semaphore.Weighted) {
+						defer sema.Release(1)
+						tokens := strings.Split(string(msg.Payload), logger.SeparatorTsv)
+						var finish = true
+						if len(tokens) == 2 {
+							lwi := getLogWriter(tokens[0])
+							if lwi == nil {
+								log.Printf(fmt.Sprintf("WARM: no log writer found for category [%s]", tokens[0]))
+							} else if err := lwi.LogWriter.Write(tokens[0], tokens[1]); err != nil {
+								log.Printf(fmt.Sprintf("ERROR: error writing log to [%s]: %e", tokens[0], err))
+								if lwi.RetrySeconds < 0 || msg.Timestamp.Unix()+lwi.RetrySeconds >= time.Now().Unix() {
+									// set finish=false to requeue if message has not been queued for 'RetrySeconds'
+									finish = false
+								}
+							} else {
+								atomic.AddInt64(counterSuccess, 1)
+							}
+						}
+						if finish {
+							if err := buffer.Finish(msg.Id); err != nil {
+								log.Printf(fmt.Sprintf("ERROR: error finishing message %s/%s: %e", msg.Id, string(msg.Payload), err))
+							}
+						} else if _, err := buffer.Requeue(msg.Id, false); err != nil {
+							log.Printf(fmt.Sprintf("ERROR: error requeueing message %s/%s: %e", msg.Id, string(msg.Payload), err))
+						}
+					}(msg, &counterSuccess, sema)
 				} else {
-					counterSuccess++
+					sema.Release(1)
 				}
-			}
-			if finish {
-				if err := buffer.Finish(msg.Id); err != nil {
-					log.Printf(fmt.Sprintf("ERROR: error finishing message %s/%s: %e", msg.Id, string(msg.Payload), err))
-				}
-			} else if _, err := buffer.Requeue(msg.Id, false); err != nil {
-				log.Printf(fmt.Sprintf("ERROR: error requeueing message %s/%s: %e", msg.Id, string(msg.Payload), err))
 			}
 			if ConcurrentWrite > 0 && counterAll >= 100/(ConcurrentWrite+1) || time.Now().Unix()-t1.Unix() >= 10 {
 				// throttle [buffer->log-writer] rate
 				break
 			}
 		}
-		if counterSuccess > 0 {
-			log.Printf(fmt.Sprintf("INFO: %d log(s) written", counterSuccess))
+		if counterSuccess-markSuccess > 0 {
+			log.Printf(fmt.Sprintf("INFO: %d log(s) written, %d accumulated", counterSuccess-markSuccess, counterSuccess))
 		}
 	}
 }

@@ -10,5 +10,6 @@ require (
 	github.com/go-akka/configuration v0.0.0-20200115015912-550403a6bd87
 	github.com/golang/protobuf v1.3.2
 	github.com/labstack/echo/v4 v4.1.14
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 	google.golang.org/grpc v1.26.0
 )

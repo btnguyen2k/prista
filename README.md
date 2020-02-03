@@ -2,7 +2,7 @@
 
 A log collector service.
 
-Latest release version: `0.1.0`. See [RELEASE-NOTES.md](RELEASE-NOTES.md).
+Latest release version: `0.1.1`. See [RELEASE-NOTES.md](RELEASE-NOTES.md).
 
 ## Introduction
 
@@ -40,7 +40,7 @@ By default, UDP gateway listens on port `8070`.
 - [x] Log writer to write logs to file:
   - [x] Time-based file rotation
   - [ ] Size-based rotation
-- [ ] Log writer to forward logs to another `prista`
+- [x] Log writer to forward logs to another `prista`
 - [ ] Log writer that is a chain of log writers
 - [ ] Plugin architecture for log writer
 
@@ -168,16 +168,35 @@ Then, log writer's configurations are loaded from `log.<category>.file` block.
 
 Detailed configurations of "file" log writer.
 
-| Key          | Require | Default Value | Description |
-|--------------|:-------:|:-------------:|-------------|
-| root         | yes     |               | Root directory to store log files. If the directory does not exist, it will be automatically created. |
-| file_pattern | yes     |               | Name of the log file. It accepts Go-style of datetime format. Therefore, to rotate log file every hour, an example of file name pattern would be default.log-20060102_15 |
-| log_type     |         | json          | (*) Format of log file content: `tsv` or `json` |
+| Key           | Require | Default Value | Description |
+|---------------|:-------:|:-------------:|-------------|
+| root          | yes     |               | Root directory to store log files. If the directory does not exist, it will be automatically created. |
+| file_pattern  | yes     |               | Name of the log file. It accepts Go-style of datetime format. Therefore, to rotate log file every hour, an example of file name pattern would be `default.log-20060102_15`. |
+| log_type      |         | json          | (*) Format of log file content: `tsv` or `json`. |
+| retry_seconds |         | 60            | If log entry is failed to be written, the write is retrying for (at least) a number of seconds before the log entry is discarded. `0` means 'no retry' and a negative value means 'retry forever'. |
 
 (*) Log file format:
 - `tsv`: one line per log entry in the following format `<category-name><tab-character><log-message>`
 - `json`: one line per log entry in the following format `{"category":<category-name>, "message": <log-message>}`
 
+### "forward" log writer
+
+This log writer forwards log entries to another `prista` instance.
+
+To enable "forward" log writer for a category, set config key `log.<category>.type="forward"`.
+Then, log writer's configurations are loaded from `log.<category>.forward` block.
+
+Detailed configurations of "forward" log writer.
+
+| Key           | Require | Default Value | Description |
+|---------------|:-------:|:-------------:|-------------|
+| destination   | yes     |               | (*) Destination to forward log entries to. |
+| retry_seconds |         | 60            | If log entry is failed to be written, the write is retrying for (at least) a number of seconds before the log entry is discarded. `0` means 'no retry' and a negative value means 'retry forever'. |
+
+(*) Destination is one of the following:
+- `udp://host:port`: forward log entries to another `prista` instance via UDP.
+- `grpc://host:port`: forward log entries to another `prista` instance via gRPC.
+- `http://host:port` or `https://host:port`: forward log entries to another `prista` instance via HTTP(s) request. Note: destinated `prista` must be `v0.1.1` or higher.
 
 ## LICENSE & COPYRIGHT
 
