@@ -23,8 +23,8 @@ GitHub repository: https://github.com/btnguyen2k/prista
 | GRPC_LISTEN_PORT  | 8090             | gRPC server's listen port. Set to 0 to disable gRPC server. |
 | UDP_LISTEN_ADDR   | 0.0.0.0          | UDP server's listen address. |
 | UDP_LISTEN_PORT   | 8070             | UDP server's listen port. Set to 0 to disable gRPC server. |
-| UDP_THREADS       | 4                | Number of threads to handle messages sent via UDP. |
+| UDP_THREADS       | 4                | (since v0.1.2) Number of threads to handle messages sent via UDP. |
 | MAX_REQUEST_SIZE  | 4kB              | Max request size (imply max log entry size). Format: absolute number means `size in bytes` or number+suffix, see https://github.com/lightbend/config/blob/master/HOCON.md#size-in-bytes-format |
 | REQUEST_TIMEOUT   | 10s              | Timeout to read request data. Format: absolute number means `time in milliseconds` or number+suffix, see https://github.com/lightbend/config/blob/master/HOCON.md#duration-format |
 | TEMP_DIR          | ./temp           | "temp" directory to buffer incoming log messages. |
-| MAX_WRITE_THREADS | 128              |  Max number of concurrent log writes. |
+| MAX_WRITE_THREADS | 128              | (since v0.1.2) Max number of concurrent log writes. |
