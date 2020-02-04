@@ -28,6 +28,11 @@ var (
 	ConcurrentWrite int64 = 0
 )
 
+const (
+	defaultUdpThreads      = 4
+	defaultMaxWriteThreads = 128
+)
+
 /*
 Start bootstraps the application.
 */
@@ -51,15 +56,23 @@ func Start() {
 		panic("no valid log writer for 'default' category")
 	}
 
-	go goWriteLogs(Buffer)
+	maxWriteThreads := AppConfig.GetInt64("max_write_threads", defaultMaxWriteThreads)
+	if maxWriteThreads < 1 {
+		maxWriteThreads = defaultMaxWriteThreads
+	}
+	go goWriteLogs(Buffer, maxWriteThreads)
 	go goProcessOrphanLogs(Buffer)
 
 	var wg sync.WaitGroup
 	if initHttpServer(&wg) {
 		wg.Add(1)
 	}
-	if initUdpServer(&wg) {
-		wg.Add(1)
+	numUdpThreads := int(AppConfig.GetInt32("server.udp.num_threads", defaultUdpThreads))
+	if numUdpThreads < 1 {
+		numUdpThreads = defaultUdpThreads
+	}
+	if initUdpServer(&wg, numUdpThreads) {
+		wg.Add(numUdpThreads)
 	}
 	if initGrpcServer(&wg) {
 		wg.Add(1)
@@ -111,8 +124,8 @@ func getLogWriter(cat string) *logger.LogWriterAndInfo {
 }
 
 // Go routine to fetch messages from buffer and send to log writer
-func goWriteLogs(buffer singu.IQueue) {
-	sema := semaphore.NewWeighted(128)
+func goWriteLogs(buffer singu.IQueue, maxThreads int64) {
+	sema := semaphore.NewWeighted(maxThreads)
 	var counterSuccess int64 = 0
 	for {
 		time.Sleep(1 * time.Second)

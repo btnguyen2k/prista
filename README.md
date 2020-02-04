@@ -2,7 +2,7 @@
 
 A log collector service.
 
-Latest release version: `0.1.1`. See [RELEASE-NOTES.md](RELEASE-NOTES.md).
+Latest release version: `0.1.2`. See [RELEASE-NOTES.md](RELEASE-NOTES.md).
 
 ## Introduction
 
@@ -144,6 +144,12 @@ server {
 
 # "temp" directory to buffer incoming messages
 temp_dir = "./temp"
+
+# Number of threads to handle messages send via UDP
+num_udp_threads = 4
+
+# Max number of concurrent log writes
+max_write_threads = 128
 
 log {
   default {

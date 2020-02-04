@@ -9,7 +9,7 @@ import (
 )
 
 // initialize and start UDP server
-func initUdpServer(wg *sync.WaitGroup) bool {
+func initUdpServer(wg *sync.WaitGroup, numServers int) bool {
 	listenPort := AppConfig.GetInt32("server.udp.listen_port", 0)
 	if listenPort <= 0 {
 		log.Println("No valid [server.udp.listen_port] configured, UDP server is disabled.")
@@ -27,21 +27,24 @@ func initUdpServer(wg *sync.WaitGroup) bool {
 		bodyLimit = big.NewInt(4086)
 	}
 	buffer := make([]byte, bodyLimit.Int64())
-	go func() {
-		defer pc.Close()
-		for {
-			// ReadFrom blocks until data received or timed-out
-			n, _, err := pc.ReadFrom(buffer)
-			if err != nil {
-				log.Printf(fmt.Sprintf("ERROR: error while reading UDP data: %e", err))
-			} else if n > 0 {
-				payload := buffer[:n]
-				if err := handleIncomingMessage(payload); err != nil {
-					log.Printf(err.Error())
+	for i := 0; i < numServers; i++ {
+		go func() {
+			defer pc.Close()
+			for {
+				// ReadFrom blocks until data received or timed-out
+				n, _, err := pc.ReadFrom(buffer)
+				if err != nil {
+					log.Printf(fmt.Sprintf("ERROR: error while reading UDP data: %e", err))
+				} else if n > 0 {
+					go func(payload []byte) {
+						if err := handleIncomingMessage(payload); err != nil {
+							log.Printf(err.Error())
+						}
+					}(buffer[:n])
 				}
 			}
-		}
-		wg.Done()
-	}()
+			wg.Done()
+		}()
+	}
 	return true
 }
