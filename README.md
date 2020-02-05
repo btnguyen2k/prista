@@ -34,7 +34,7 @@ Send log entry in the following format to UDP gateway: `<category><\t><message>`
 
 By default, UDP gateway listens on port `8070`.
 
-## Features & TODO
+### Features & TODO
 
 - [x] Collect logs via HTTP, gRPC and UDP service
 - [x] Log writer to write logs to file:
@@ -45,7 +45,7 @@ By default, UDP gateway listens on port `8070`.
 - [ ] Plugin architecture for log writer
 
 
-## How It Works
+### How It Works
 
 ![prista system overview](docs/imgs/prista-overview.png "prista system overview")
 
