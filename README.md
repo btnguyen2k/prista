@@ -45,6 +45,11 @@ By default, UDP gateway listens on port `8070`.
 - [ ] Plugin architecture for log writer
 
 
+## How It Works
+
+![prista system overview](docs/imgs/prista-overview.png "prista system overview")
+
+
 ## Installation
 
 ### Build from source
