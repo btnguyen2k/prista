@@ -70,7 +70,7 @@ func httpHandlerLog(c echo.Context) error {
 		return c.HTML(http.StatusBadRequest, "Missing parameter [category] and/or [message]")
 	}
 	payload := strings.ToLower(category) + logger.SeparatorTsv + message
-	if err := handleIncomingMessage([]byte(payload)); err != nil {
+	if err := handleIncomingMessage([]byte(payload), true); err != nil {
 		return c.HTML(http.StatusInternalServerError, err.Error())
 	}
 	return c.JSON(http.StatusOK, map[string]interface{}{"status": 200, "message": "Ok"})

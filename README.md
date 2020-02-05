@@ -2,7 +2,7 @@
 
 A log collector service.
 
-Latest release version: `0.1.2`. See [RELEASE-NOTES.md](RELEASE-NOTES.md).
+Latest release version: `0.1.3`. See [RELEASE-NOTES.md](RELEASE-NOTES.md).
 
 ## Introduction
 
@@ -41,7 +41,7 @@ By default, UDP gateway listens on port `8070`.
   - [x] Time-based file rotation
   - [ ] Size-based rotation
 - [x] Log writer to forward logs to another `prista`
-- [ ] Log writer that is a chain of log writers
+- [x] Log writer that is a chain of log writers
 - [ ] Plugin architecture for log writer
 
 
@@ -170,14 +170,14 @@ log {
 
 ## Built-in Log Writers
 
-### "file" log writer
+### `file` log writer
 
-This log writer persists log messages to files on disk in text-based format.
+This log writer persists logs to files on disk in text-based format.
 
-To enable "file" log writer for a category, set config key `log.<category>.type="file"`.
+To enable `file` log writer for a category, set config key `log.<category>.type="file"`.
 Then, log writer's configurations are loaded from `log.<category>.file` block.
 
-Detailed configurations of "file" log writer.
+Detailed configurations of `file` log writer.
 
 | Key           | Require | Default Value | Description |
 |---------------|:-------:|:-------------:|-------------|
@@ -190,14 +190,14 @@ Detailed configurations of "file" log writer.
 - `tsv`: one line per log entry in the following format `<category-name><tab-character><log-message>`
 - `json`: one line per log entry in the following format `{"category":<category-name>, "message": <log-message>}`
 
-### "forward" log writer
+### `forward` log writer
 
-This log writer forwards log entries to another `prista` instance.
+This log writer forwards logs to another `prista` instance.
 
-To enable "forward" log writer for a category, set config key `log.<category>.type="forward"`.
+To enable `forward` log writer for a category, set config key `log.<category>.type="forward"`.
 Then, log writer's configurations are loaded from `log.<category>.forward` block.
 
-Detailed configurations of "forward" log writer.
+Detailed configurations of `forward` log writer.
 
 | Key           | Require | Default Value | Description |
 |---------------|:-------:|:-------------:|-------------|
@@ -208,6 +208,20 @@ Detailed configurations of "forward" log writer.
 - `udp://host:port`: forward log entries to another `prista` instance via UDP.
 - `grpc://host:port`: forward log entries to another `prista` instance via gRPC.
 - `http://host:port` or `https://host:port`: forward log entries to another `prista` instance via HTTP(s) request. Note: destinated `prista` must be `v0.1.1` or higher.
+
+### `fanout` log writer
+
+This log writer fan-outs logs to other log writers.
+
+To enable `fanout` log writer for a category, set config key `log.<category>.type="fanout"`.
+Then, log writer's configurations are loaded from `log.<category>.fanout` block.
+
+Detailed configurations of `fanout` log writer.
+
+| Key           | Require | Default Value | Description |
+|---------------|:-------:|:-------------:|-------------|
+| targets       | yes     |               | List of category names (comma separated) to fan-out log entries to. |
+
 
 ## LICENSE & COPYRIGHT
 

@@ -9,6 +9,7 @@ package utils
 import (
 	"bytes"
 	olaf2 "github.com/btnguyen2k/consu/olaf"
+	"github.com/go-akka/configuration/hocon"
 	"math/rand"
 	"net"
 	"strconv"
@@ -54,13 +55,90 @@ func UniqueIdSmall() string {
 
 const letters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
-/*
-RandomString generates a random string with specified length.
-*/
+// RandomString generates a random string with specified length.
 func RandomString(l int) string {
 	b := make([]byte, l)
 	for i := range b {
 		b[i] = letters[rand.Intn(len(letters))]
 	}
 	return string(b)
+}
+
+func UnwrapHocon(h interface{}) interface{} {
+	switch h.(type) {
+	case hocon.HoconValue:
+		return unwrapHoconValue(h.(hocon.HoconValue))
+	case *hocon.HoconValue:
+		return unwrapHoconValue(*h.(*hocon.HoconValue))
+	case hocon.HoconObject:
+		return unwrapHoconObject(h.(hocon.HoconObject))
+	case *hocon.HoconObject:
+		return unwrapHoconObject(*h.(*hocon.HoconObject))
+	case map[string]interface{}:
+		return unwrapMap(h.(map[string]interface{}))
+	case *map[string]interface{}:
+		return unwrapMap(*h.(*map[string]interface{}))
+	case []hocon.HoconValue:
+		return unwrapSliceHoconValue(h.([]hocon.HoconValue))
+	case *[]hocon.HoconValue:
+		return unwrapSliceHoconValue(*h.(*[]hocon.HoconValue))
+	case []*hocon.HoconValue:
+		return unwrapSlicePHoconValue(h.([]*hocon.HoconValue))
+	case *[]*hocon.HoconValue:
+		return unwrapSlicePHoconValue(*h.(*[]*hocon.HoconValue))
+	case []interface{}:
+		return unwrapSlice(h.([]interface{}))
+	case *[]interface{}:
+		return unwrapSlice(*h.(*[]interface{}))
+	}
+	return h
+}
+
+func unwrapSliceHoconValue(h []hocon.HoconValue) []interface{} {
+	result := make([]interface{}, 0)
+	for _, v := range h {
+		result = append(result, UnwrapHocon(v))
+	}
+	return result
+}
+
+func unwrapSlicePHoconValue(h []*hocon.HoconValue) []interface{} {
+	result := make([]interface{}, 0)
+	for _, v := range h {
+		result = append(result, UnwrapHocon(v))
+	}
+	return result
+}
+
+func unwrapMap(h map[string]interface{}) map[string]interface{} {
+	result := make(map[string]interface{})
+	for k, v := range h {
+		result[k] = UnwrapHocon(v)
+	}
+	return result
+}
+
+func unwrapSlice(h []interface{}) []interface{} {
+	result := make([]interface{}, 0)
+	for _, v := range h {
+		result = append(result, UnwrapHocon(v))
+	}
+	return result
+}
+
+func unwrapHoconValue(h hocon.HoconValue) interface{} {
+	if h.IsString() {
+		return h.GetString()
+	}
+	if h.IsObject() {
+		return UnwrapHocon(h.GetObject())
+	}
+	if h.IsArray() {
+		return UnwrapHocon(h.GetArray())
+	}
+	return nil
+}
+
+func unwrapHoconObject(h hocon.HoconObject) interface{} {
+	return UnwrapHocon(h.Unwrapped())
 }

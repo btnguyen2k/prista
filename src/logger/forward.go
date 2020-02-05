@@ -20,7 +20,7 @@ import (
 	"time"
 )
 
-// NewForwardLogWriter creates a new log writer that forwards to another prista instance, initialized and ready for use.
+// NewForwardLogWriter creates a new log writer that forwards log entries to another prista instance, initialized and ready for use.
 //	- cat: log category name
 //	- conf: log writer configurations
 func NewForwardLogWriter(cat string, confMap map[string]interface{}) (ILogWriter, error) {
@@ -28,6 +28,8 @@ func NewForwardLogWriter(cat string, confMap map[string]interface{}) (ILogWriter
 	return logWriter, logWriter.Init(confMap)
 }
 
+// ForwardLogWriter forwards logs to another prista instance
+// @available since v0.1.1
 type ForwardLogWriter struct {
 	category     string // log category
 	destination  string // destination to forward log entry to

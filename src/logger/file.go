@@ -21,6 +21,7 @@ func NewFileLogWriter(cat string, confMap map[string]interface{}) (ILogWriter, e
 	return logWriter, logWriter.Init(confMap)
 }
 
+// FileLogWriter writes logs to files on disk
 type FileLogWriter struct {
 	category     string // log category
 	root         string // root directory to store log files

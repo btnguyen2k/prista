@@ -14,10 +14,15 @@ const (
 	ConfRetrySeconds    = "retry_seconds"
 )
 
+// LogWriterAndInfo encapsulates a log writer instance and other configuration info
 type LogWriterAndInfo struct {
 	LogWriter    ILogWriter
 	RetrySeconds int64
 }
+
+// FuncEnqueue is a function that enqueues a log entry
+// @available since v0.1.3
+type FuncEnqueue func(payload []byte, throttling bool) error
 
 // ILogWriter defines API to write log message.
 type ILogWriter interface {
@@ -44,7 +49,7 @@ type ILogWriter interface {
 // NewLogWriter creates a new log writer instance, initialized and ready for use.
 //	- cat: log category name
 //	- conf: log writer configurations
-func NewLogWriter(cat string, confMap map[string]interface{}) (ILogWriter, error) {
+func NewLogWriter(cat string, confMap map[string]interface{}, enqueueFunc FuncEnqueue) (ILogWriter, error) {
 	typeMap := reflect.TypeOf(map[string]interface{}{})
 	conf := semita.NewSemita(confMap)
 	wrtType, err := conf.GetValueOfType("type", reddo.TypeString)
@@ -63,6 +68,12 @@ func NewLogWriter(cat string, confMap map[string]interface{}) (ILogWriter, error
 			return nil, err
 		} else {
 			return NewForwardLogWriter(cat, confForward.(map[string]interface{}))
+		}
+	case "fanout":
+		if confFanout, err := conf.GetValueOfType("fanout", typeMap); err != nil {
+			return nil, err
+		} else {
+			return NewFanoutLogWriter(cat, confFanout.(map[string]interface{}), enqueueFunc)
 		}
 	default:
 		return nil, errors.New(fmt.Sprintf("unknown writer type [%s]", wrtType))

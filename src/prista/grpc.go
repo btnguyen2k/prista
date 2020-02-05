@@ -63,7 +63,7 @@ func (server *PLogCollectorServiceServer) Log(_ context.Context, msg *pb.PLogMes
 		}, nil
 	}
 	payload := strings.ToLower(category) + logger.SeparatorTsv + message
-	if err := handleIncomingMessage([]byte(payload)); err != nil {
+	if err := handleIncomingMessage([]byte(payload), true); err != nil {
 		return &pb.PLogResult{
 			Status:     500,
 			NumSuccess: 0,
@@ -102,7 +102,7 @@ func (server *PLogCollectorServiceServer) LogStream(msgs pb.PLogCollectorService
 			return msgs.SendAndClose(result)
 		}
 		payload := strings.ToLower(category) + logger.SeparatorTsv + message
-		if err := handleIncomingMessage([]byte(payload)); err != nil {
+		if err := handleIncomingMessage([]byte(payload), true); err != nil {
 			result.Status = 500
 			result.Message = err.Error()
 			return msgs.SendAndClose(result)

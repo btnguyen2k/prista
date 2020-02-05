@@ -37,7 +37,7 @@ func initUdpServer(wg *sync.WaitGroup, numServers int) bool {
 					log.Printf(fmt.Sprintf("ERROR: error while reading UDP data: %e", err))
 				} else if n > 0 {
 					go func(payload []byte) {
-						if err := handleIncomingMessage(payload); err != nil {
+						if err := handleIncomingMessage(payload, true); err != nil {
 							log.Printf(err.Error())
 						}
 					}(buffer[:n])

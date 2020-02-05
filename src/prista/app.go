@@ -183,7 +183,8 @@ func initLogWriters(config *configuration.Config) map[string]*logger.LogWriterAn
 		for cat, conf := range config.Root().GetObject().Items() {
 			if conf != nil && conf.IsObject() {
 				cat = strings.ToLower(cat)
-				if writer, err := logger.NewLogWriter(cat, conf.GetObject().Unwrapped()); err != nil {
+				writerConf := utils.UnwrapHocon(conf)
+				if writer, err := logger.NewLogWriter(cat, writerConf.(map[string]interface{}), handleIncomingMessage); err != nil {
 					panic(err)
 				} else {
 					lwi := logger.LogWriterAndInfo{LogWriter: writer}
@@ -206,10 +207,13 @@ func initLogWriters(config *configuration.Config) map[string]*logger.LogWriterAn
 }
 
 // convenient function to handle incoming message
-func handleIncomingMessage(payload []byte) error {
-	// increase concurrency count to throttle [buffer->log-writer] rate
-	atomic.AddInt64(&ConcurrentWrite, 1)
-	defer atomic.AddInt64(&ConcurrentWrite, -1)
+// payload format: <category-name><tab-character><log-message>
+func handleIncomingMessage(payload []byte, throttling bool) error {
+	if throttling {
+		// increase concurrency count to throttle [buffer->log-writer] rate
+		atomic.AddInt64(&ConcurrentWrite, 1)
+		defer atomic.AddInt64(&ConcurrentWrite, -1)
+	}
 
 	_, err := Buffer.Queue(singu.NewQueueMessage(payload))
 	return err
