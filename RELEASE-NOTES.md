@@ -1,5 +1,10 @@
 # prista Release Notes
 
+## 2020-02-08 - v0.1.4
+
+- New `console` log writer that writes logs to stdout/stderr.
+
+
 ## 2020-02-05 - v0.1.3
 
 - New `fanout` log writer that fan-outs logs to other log writers.

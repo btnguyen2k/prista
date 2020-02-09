@@ -2,7 +2,7 @@
 
 A log collector service.
 
-Latest release version: `0.1.3`. See [RELEASE-NOTES.md](RELEASE-NOTES.md).
+Latest release version: `0.1.4`. See [RELEASE-NOTES.md](RELEASE-NOTES.md).
 
 ## Introduction
 
@@ -160,15 +160,42 @@ log {
   default {
     # log writer configuration for "default" category.
     # "Default" category is where logs that do not belong to any category go to.
-    type = "file"
+    type = "console"
+    console {
+      # configuration for "console"-type log writer
+    }
     file {
       # configuration for "file"-type log writer
+    }
+    forward {
+      # configuration for "forward"-type log writer
+    }
+    fanout {
+      # configuration for "fanout"-type log writer
     }
   }
 }
 ```
 
 ## Built-in Log Writers
+
+As of [v0.1.4](RELEASE-NOTES.md), `prista` has the following built-in log writers:
+
+### `console` log writer
+
+_Available since [v0.1.4](RELEASE-NOTES.md)._
+
+This log writer writes logs to `stdout` or `stderr`.
+
+To enable `console` log writer for a category, set config key `log.<category>.type="console"`.
+Then, log writer's configurations are loaded from `log.<category>.console` block.
+
+Detailed configurations of `console` log writer.
+
+| Key           | Require | Default Value | Description |
+|---------------|:-------:|:-------------:|-------------|
+| target        |         | stdout        | Target to write logs to (`stdout` or `stder`). |
+
 
 ### `file` log writer
 
@@ -192,6 +219,8 @@ Detailed configurations of `file` log writer.
 
 ### `forward` log writer
 
+_Available since [v0.1.1](RELEASE-NOTES.md)._
+
 This log writer forwards logs to another `prista` instance.
 
 To enable `forward` log writer for a category, set config key `log.<category>.type="forward"`.
@@ -210,6 +239,8 @@ Detailed configurations of `forward` log writer.
 - `http://host:port` or `https://host:port`: forward log entries to another `prista` instance via HTTP(s) request. Note: destinated `prista` must be `v0.1.1` or higher.
 
 ### `fanout` log writer
+
+_Available since [v0.1.3](RELEASE-NOTES.md)._
 
 This log writer fan-outs logs to other log writers.
 
